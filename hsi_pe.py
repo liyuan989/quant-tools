@@ -530,6 +530,8 @@ data_config = {
         ['2016-09-30', 11.5],
         ['2016-10-31', 11.3],
         ['2016-11-30', 11.3],
+        ['2017-01-31', 11.53],
+        ['2017-02-28', 12.75],
     ],
 
     u'恒生国企指数' : [
@@ -715,6 +717,8 @@ data_config = {
         ['2016-09-30', 7.6],
         ['2016-10-31', 7.5],
         ['2016-11-30', 7.8],
+        ['2017-01-31', 7.76],
+        ['2017-02-28', 8.1],
     ],
 }
     
@@ -740,7 +744,7 @@ def get_index_pe_pb(config):
 df_pe_pb = pd.DataFrame()
 frames = pd.DataFrame()
 today = pd.datetime.today()
-pe_config = [11.2, 7.7]
+pe_config = [11.72, 8.06]
 pe_index = 0
 for index_name, config in data_config.items() :
     print '正在处理: %s' % index_name
