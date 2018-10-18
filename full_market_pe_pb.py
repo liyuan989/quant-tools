@@ -72,17 +72,19 @@ def get_index_pe_pb():
             average_pes.append(sum(pes) / len(pes))
             average_pbs.append(sum(pbs) / len(pbs))
             dates.append(d)
-    d = {
+    d_pe = {
         'PE' : pd.Series(pes, index = dates),
-        'PB' : pd.Series(pbs, index = dates),
         'AVERAGE_PE' : pd.Series(average_pes, index = dates),
+    }
+    d_pb = {
+        'PB' : pd.Series(pbs, index = dates),
         'AVERAGE_PB' : pd.Series(average_pbs, index = dates),
     }
-    PB_PE = pd.DataFrame(d)
-    return PB_PE
+    PE = pd.DataFrame(d_pe)
+    PB = pd.DataFrame(d_pb)
+    return PE, PB
 
 
-df_pe_pb = pd.DataFrame()
 frames = pd.DataFrame()
 today = pd.datetime.today()
 results = []
@@ -90,9 +92,10 @@ index_name = u'全市场'
 
 print index_name 
 
-df_pe_pb = get_index_pe_pb()        
+df_pe, df_pb = get_index_pe_pb()
+
 pe = get_index_pe_date(today)
-q_pes = [df_pe_pb['PE'].quantile(i / 10.0) for i in range(11)]    
+q_pes = [df_pe['PE'].quantile(i / 10.0) for i in range(11)]    
 index_pe = bisect.bisect(q_pes, pe)
 if index_pe <= 0:
     quantile_pe = 0
@@ -105,14 +108,14 @@ results.append(
         index_name, 
         today.strftime('%Y-%m-%d'), 
         '%.2f' % pe, 
-        '%.2f' % df_pe_pb['AVERAGE_PE'][-1], 
+        '%.2f' % df_pe['AVERAGE_PE'][-1], 
         '%.2f' % (quantile_pe * 10)
     ] + 
-    ['%.2f' % q for q in q_pes] + [df_pe_pb['PE'].count()]
+    ['%.2f' % q for q in q_pes] + [df_pe['PE'].count()]
 )
  
 pb = get_index_pb_date(today)
-q_pbs = [df_pe_pb['PB'].quantile(i / 10.0)  for i in range(11)]
+q_pbs = [df_pb['PB'].quantile(i / 10.0)  for i in range(11)]
 index_pb = bisect.bisect(q_pbs, pb)
 if index_pb <= 0:
     quantile_pb = 0
@@ -125,26 +128,33 @@ results.append(
         index_name, 
         today.strftime('%Y-%m-%d'), 
         '%.2f' % pb,
-        '%.2f' % df_pe_pb['AVERAGE_PB'][-1],
+        '%.2f' % df_pb['AVERAGE_PB'][-1],
         '%.2f' % (quantile_pb * 10)
     ] + 
-    ['%.2f' % q for q in q_pbs] + [df_pe_pb['PB'].count()]
+    ['%.2f' % q for q in q_pbs] + [df_pb['PB'].count()]
 )
 
-df_pe_pb['10% PE'] = q_pes[1]
-df_pe_pb['30% PE'] = q_pes[3]
-df_pe_pb['50% PE'] = q_pes[5]
-df_pe_pb['90% PE'] = q_pes[9]
-df_pe_pb['10% PB'] = q_pbs[1]
-df_pe_pb['30% PB'] = q_pbs[3]
-df_pe_pb['50% PB'] = q_pbs[5]
-df_pe_pb['90% PB'] = q_pbs[9]    
-df_pe_pb.plot(secondary_y = ['AVERAGE_PB', 'PB', '10% PB', '30% PB', '50% PB', '90% PB'],
-              figsize = (18, 10),
-              title = index_name,
-              style = ['m-.', 'm', 'k-.', 'k', 'g', 'c', 'y', 'r', 'g-.', 'c-.', 'y-.', 'r-.'])
+df_pe['10% PE'] = q_pes[1]
+df_pe['30% PE'] = q_pes[3]
+df_pe['50% PE'] = q_pes[5]
+df_pe['90% PE'] = q_pes[9]
+
+df_pb['10% PB'] = q_pbs[1]
+df_pb['30% PB'] = q_pbs[3]
+df_pb['50% PB'] = q_pbs[5]
+df_pb['90% PB'] = q_pbs[9]
+
+df_pe.plot(figsize = (18, 10),
+           title = index_name + 'PE',
+           style = ['m', 'k', 'g', 'c', 'y', 'r'])
+
+df_pb.plot(figsize = (18, 10),
+           title = index_name + 'PB',
+           style = ['m', 'k', 'g', 'c', 'y', 'r'])
+
 columns = [u'名称', u'当前日期', u'当前估值', u'平均估值', u'分位点%', u'最小估值'] + \
     ['%d%%' % (i * 10) for i in range(1, 10)] + [u'最大估值' , u"数据个数"]
 df = pd.DataFrame(data = results, index = ['PE', 'PB'], columns = columns)
 frames = pd.concat([frames, df])
-df
+
+frames
